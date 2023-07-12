@@ -14,7 +14,7 @@ model = DQN("MultiInputPolicy", env, verbose=1,tensorboard_log="./countersgame_t
 # Train the agent
 # model.learn(total_timesteps=60000,progress_bar=True)
 # model.learn(total_timesteps=10)
-model.learn(total_timesteps=150000,tb_log_name="first_run")
+model.learn(total_timesteps=300000,tb_log_name="third_run")
 
 # Save the trained agent
 model.save("q_learning_agent2")
@@ -23,10 +23,12 @@ model.save("q_learning_agent2")
 
 # Evaluate the trained agent
 total_reward = 0
-num_episodes = 100
+num_episodes = 30
 
 observation, info = env.reset()
 counters_win=[]
+line_win=[]
+line=[]
 win=[]
 reward_win=[]
 obs = env.reset()
@@ -39,23 +41,36 @@ for j in range(num_episodes):
         action, _ = model.predict(obs)
         obs, reward, done, truncated, info = env.step(int(action))
         counters_win.append(obs['counters'])
+        line_win.append(obs['line'])
         print(j,obs,'truncated',truncated,'terminated',done,'reward',reward)
         # if done and truncated==False:
         # if done or truncated:
             # print(j,observation,'truncated',truncated,'terminated',done,'reward',reward)
     win.append(counters_win)
+    line.append(line_win)
     reward_win.append(reward)
     counters_win=[]
+    line_win=[]
     obs = env.reset()
     total_reward += reward
     
 average_reward = total_reward / num_episodes
 print("Average reward:", average_reward)   
-ix=[sum(l) for l in win].index(min([sum(l) for l in win]))
+# ix=[sum(l) for l in win].index(min([sum(l) for l in win]))
+ix=reward_win.index(min(reward_win))
 plt.figure(figsize=(24,8))
 plt.bar([str(x) for x in range(len(win[ix]))], win[ix], color ='maroon',width = 0.4)
+# plt.xticks(x[::10],  rotation='vertical')
+plt.xticks(list(range(len(win[ix])))[::10])
+plt.title('num counters día')
 plt.show()   
-print(reward_win)  
+plt.figure(figsize=(24,8))
+plt.bar([str(x) for x in range(len(win[ix]))], line[ix], color ='green',width = 0.4)
+# plt.xticks(x[::10],  rotation='vertical')
+plt.xticks(list(range(len(win[ix])))[::10])
+plt.title('num counters día')
+plt.show()  
+print(reward_win[ix])  
         
 # observation, info = env.reset()
 # # observation = env.reset()
