@@ -8,38 +8,47 @@ import matplotlib.pyplot as plt
 env = gym.make("gym_examples/CountersGame-v0",render_mode="rgb_array")
 
 # Define the Q-learning agent
-model = DQN("MultiInputPolicy", env, verbose=1)
+model = DQN("MultiInputPolicy", env, verbose=1,tensorboard_log="./countersgame_tensorboard/")
 # model = DQN("MlpPolicy", env, verbose=1)
 
 # Train the agent
 # model.learn(total_timesteps=60000,progress_bar=True)
-model.learn(total_timesteps=60000)
+# model.learn(total_timesteps=10)
+model.learn(total_timesteps=150000,tb_log_name="first_run")
 
 # Save the trained agent
-model.save("q_learning_agent")
+model.save("q_learning_agent2")
+
+# model.load("q_learning_agent")
 
 # Evaluate the trained agent
 total_reward = 0
-num_episodes = 30
+num_episodes = 100
 
+observation, info = env.reset()
 counters_win=[]
 win=[]
 reward_win=[]
+obs = env.reset()
 for j in range(num_episodes):
     print(j)
-    obs = env.reset()
+    # obs = env.reset()
     done = False
-    while not done:
+    truncated=False
+    while ((not done) and (not truncated)):
         action, _ = model.predict(obs)
-        observation, reward, done, truncated, info = env.step(action)
-        counters_win.append(observation['counters'])
-    if done and truncated==False:
-        win.append(counters_win)
-        reward_win.append(reward)
-    if done or truncated:
-        counters_win=[]
-
-total_reward += reward
+        obs, reward, done, truncated, info = env.step(int(action))
+        counters_win.append(obs['counters'])
+        print(j,obs,'truncated',truncated,'terminated',done,'reward',reward)
+        # if done and truncated==False:
+        # if done or truncated:
+            # print(j,observation,'truncated',truncated,'terminated',done,'reward',reward)
+    win.append(counters_win)
+    reward_win.append(reward)
+    counters_win=[]
+    obs = env.reset()
+    total_reward += reward
+    
 average_reward = total_reward / num_episodes
 print("Average reward:", average_reward)   
 ix=[sum(l) for l in win].index(min([sum(l) for l in win]))
